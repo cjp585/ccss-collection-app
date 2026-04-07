@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, resolve(__dirname, ".."), "PADLET_");
+  const env = loadEnv(mode, __dirname, "PADLET_");
 
   return {
   plugins: [

@@ -6,12 +6,12 @@ import { config } from "dotenv";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-config({ path: resolve(__dirname, "../.env") });
+config({ path: resolve(__dirname, ".env") });
 
 const AIRTABLE_BASE_ID = "appMbMW3rzbXTlgWq";
 const AIRTABLE_TABLE_NAME = "Resources";
 const AIRTABLE_VIEW_NAME = "ccss collection PUBLIC";
-const CSV_PATH = resolve(__dirname, "../common_core_standards_k12_march_19_2026.csv");
+const CSV_PATH = resolve(__dirname, "common_core_standards_k12_march_19_2026.csv");
 const DATA_DIR = resolve(__dirname, "data");
 
 function parseStandardsCSV() {
