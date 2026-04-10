@@ -324,7 +324,7 @@ function GameCard({ game, thumbnailMode }) {
             className="font-normal text-xs leading-[13px] mt-0.5 line-clamp-2"
             style={{ color: C.textSecondary, fontFamily: "'Nunito', sans-serif" }}
           >
-            {topic}
+            {topic.startsWith("Players ") ? topic.charAt(8).toUpperCase() + topic.slice(9) : topic}
           </p>
         )}
       </div>
@@ -968,10 +968,10 @@ export default function App() {
       {/* Title bar — Common Core Collection + breadcrumb dropdowns */}
       <div
         className="flex items-center flex-shrink-0"
-        style={{ backgroundColor: C.accent, padding: "8px 20px 8px 12px" }}
+        style={{ backgroundColor: C.accent, padding: "8px 20px 8px 20px" }}
       >
         <div className="flex items-center gap-1 sm:gap-2 mr-1 shrink-0">
-          {hasData && !showLanding && (
+          {hasData && !showLanding && !searchActive && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="md:hidden text-white cursor-pointer p-1 bg-transparent border-none"
@@ -979,25 +979,35 @@ export default function App() {
               <MenuIcon />
             </button>
           )}
-          <button
-            onClick={() => { setShowLanding(true); setSearch(""); setCommittedSearch(""); }}
-            className="bg-transparent border-none cursor-pointer p-0 flex items-center gap-1 sm:gap-2"
-          >
+          {searchActive ? (
             <span
-              className="text-white text-base sm:text-2xl font-black leading-5 sm:leading-7 whitespace-nowrap"
+              className="text-white text-base sm:text-2xl leading-5 sm:leading-7 whitespace-nowrap truncate"
               style={{ fontFamily: "'Nunito', sans-serif", letterSpacing: "0.4px" }}
             >
-              Common Core
+              <span className="font-normal">Results for </span>
+              <span className="font-black">"{committedSearch}"</span>
             </span>
-            <span
-              className="text-white text-base sm:text-2xl font-normal leading-5 sm:leading-7 whitespace-nowrap"
-              style={{ fontFamily: "'Nunito', sans-serif", letterSpacing: "0.4px" }}
+          ) : (
+            <button
+              onClick={() => { setShowLanding(true); setSearch(""); setCommittedSearch(""); }}
+              className="bg-transparent border-none cursor-pointer p-0 flex items-center gap-1 sm:gap-2"
             >
-              Collection
-            </span>
-          </button>
+              <span
+                className="text-white text-base sm:text-2xl font-black leading-5 sm:leading-7 whitespace-nowrap"
+                style={{ fontFamily: "'Nunito', sans-serif", letterSpacing: "0.4px" }}
+              >
+                Common Core
+              </span>
+              <span
+                className="text-white text-base sm:text-2xl font-normal leading-5 sm:leading-7 whitespace-nowrap"
+                style={{ fontFamily: "'Nunito', sans-serif", letterSpacing: "0.4px" }}
+              >
+                Collection
+              </span>
+            </button>
+          )}
         </div>
-        {hasData && !showLanding && (
+        {hasData && !showLanding && !searchActive && (
           <div className="flex items-baseline gap-1 sm:gap-1.5 ml-1 sm:ml-2">
             <span
               className="text-sm sm:text-lg font-light select-none"
@@ -1071,7 +1081,7 @@ export default function App() {
               className="text-xs font-semibold mb-4"
               style={{ color: C.textSecondary, fontFamily: "'Nunito', sans-serif" }}
             >
-              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} for "{committedSearch}"
+              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
             </p>
             {searchGrouped.length === 0 ? (
               <div
