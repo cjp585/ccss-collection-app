@@ -10,7 +10,7 @@ const C = {
   textTertiary: "rgba(0,0,0,0.38)",
   textFaint: "rgba(29,29,29,0.2)",
   ring: "#e3c9a1",
-  standardBg: "#f5f6f7",
+  standardBg: "#FDE7C4",
   darkChiclet: "#291a03",
   cardTitle: "#242527",
 };
@@ -348,12 +348,10 @@ function ScrollArrow({ direction, onClick, disabled }) {
       disabled={disabled}
       className="w-7 h-7 rounded-full flex items-center justify-center border-none shrink-0 transition-colors"
       style={{
-        backgroundColor: disabled ? "rgba(0,0,0,0.03)" : "rgba(0,0,0,0.06)",
-        color: disabled ? "rgba(0,0,0,0.2)" : C.text,
+        backgroundColor: "transparent",
+        color: disabled ? "rgba(0,0,0,0.15)" : C.textSecondary,
         cursor: disabled ? "default" : "pointer",
       }}
-      onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.12)"; }}
-      onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.06)"; }}
     >
       <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
         <path
@@ -421,16 +419,17 @@ function StandardCard({ standard, games, thumbnailMode }) {
         )}
       </div>
       <p
-        className="font-semibold text-sm sm:text-base leading-[18px] mt-2"
+        className="font-semibold text-sm sm:text-base leading-[18px]"
         style={{
-          color: C.text,
+          color: C.textSecondary,
           fontFamily: "'Nunito', sans-serif",
+          paddingLeft: "2px",
         }}
       >
         {standard["Standard Description"]}
       </p>
       {gameCount > 0 && (
-        <div ref={scrollRef} className="flex gap-2 mt-3 sm:mt-4 overflow-x-auto pb-1">
+        <div ref={scrollRef} className="flex gap-2 mt-2 sm:mt-2.5 overflow-x-auto pb-1">
           {games.map((game, i) => (
             <GameCard key={game.id || i} game={game} thumbnailMode={thumbnailMode} />
           ))}
@@ -469,7 +468,7 @@ function SidebarContent({ grouped, activeDomain, activeCluster, scrollTo, onNavC
             >
               <div
                 className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: isActive ? C.accent : C.text }}
+                style={{ backgroundColor: isActive ? C.accent : C.textTertiary }}
               />
               <span
                 className="text-sm font-bold leading-5 flex-1"
@@ -824,7 +823,7 @@ export default function App() {
       >
         <div className="flex items-center shrink-0">
           <span
-            className="text-white text-base"
+            className="text-white text-xl"
             style={{
               fontFamily: "'Titan One', cursive",
               textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
@@ -835,10 +834,10 @@ export default function App() {
         </div>
 
         <div
-          className="flex-1 flex items-center rounded-full px-3 py-1.5 min-w-0"
-          style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+          className="flex-1 flex items-center rounded-full px-4 min-w-0"
+          style={{ backgroundColor: "rgba(255,255,255,0.15)", height: "40px" }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
           </svg>
@@ -848,7 +847,7 @@ export default function App() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") setCommittedSearch(search.trim()); }}
-            className="search-input flex-1 ml-2 text-xs font-semibold outline-none border-none bg-transparent min-w-0"
+            className="search-input flex-1 ml-2.5 text-base font-semibold outline-none border-none bg-transparent min-w-0"
             style={{
               color: "white",
               fontFamily: "'Nunito', sans-serif",
@@ -864,15 +863,17 @@ export default function App() {
               <CloseIcon />
             </button>
           )}
-          <button
-            onClick={() => setCommittedSearch(search.trim())}
-            className="shrink-0 bg-transparent border-none cursor-pointer p-0 ml-1"
-            style={{ color: "rgba(255,255,255,0.8)" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
+          {search && (
+            <button
+              onClick={() => setCommittedSearch(search.trim())}
+              className="shrink-0 bg-transparent border-none cursor-pointer p-0 ml-1"
+              style={{ color: "rgba(255,255,255,0.8)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -974,7 +975,7 @@ export default function App() {
                   <option key={s} value={s} style={{ color: C.text }}>{s}</option>
                 ))}
               </select>
-              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5" style={{ color: "rgba(255,255,255,0.6)" }} />
+              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5" style={{ color: "white" }} />
             </div>
             <span
               className="text-sm sm:text-lg font-light select-none"
@@ -1002,7 +1003,7 @@ export default function App() {
                   <option key={g} value={g} style={{ color: C.text }}>{gradeLabel(g)}</option>
                 ))}
               </select>
-              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5" style={{ color: "rgba(255,255,255,0.6)" }} />
+              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5" style={{ color: "white" }} />
             </div>
           </div>
         )}
@@ -1122,7 +1123,7 @@ export default function App() {
           </aside>
 
           <main ref={mainRef} className="flex-1 overflow-y-auto">
-            <div className="px-0 sm:pr-6 sm:pl-0">
+            <div>
               {grouped.length === 0 ? (
                 <div
                   className="text-center py-16 text-sm font-semibold"
