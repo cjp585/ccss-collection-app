@@ -525,6 +525,8 @@ function SidebarContent({ grouped, activeDomain, activeCluster, scrollTo, onNavC
   );
 }
 
+const INIT_PARAMS = new URLSearchParams(window.location.search);
+
 function GradePickerBody({ subjects, standards, onSelect }) {
   const gradesBySubject = useMemo(() => {
     const map = {};
@@ -563,7 +565,7 @@ function GradePickerBody({ subjects, standards, onSelect }) {
             >
               {subj}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-2.5">
               {(gradesBySubject[subj] || []).map((g) => (
                 <button
                   key={g}
@@ -601,16 +603,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState(null);
-  const [subject, setSubject] = useState("all");
-  const [grade, setGrade] = useState("K");
-  const [search, setSearch] = useState("");
-  const [committedSearch, setCommittedSearch] = useState("");
+  const [subject, setSubject] = useState(INIT_PARAMS.get("subject") || "all");
+  const [grade, setGrade] = useState(INIT_PARAMS.get("grade") || "K");
+  const [search, setSearch] = useState(INIT_PARAMS.get("q") || "");
+  const [committedSearch, setCommittedSearch] = useState(INIT_PARAMS.get("q") || "");
   const [activeDomain, setActiveDomain] = useState(null);
   const [activeCluster, setActiveCluster] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [thumbnailMode, setThumbnailMode] = useState("ai");
-  const [showLanding, setShowLanding] = useState(true);
+  const [showLanding, setShowLanding] = useState(
+    !INIT_PARAMS.has("subject") && !INIT_PARAMS.has("q")
+  );
   const mainRef = useRef(null);
+  const pendingScroll = useRef({
+    domain: INIT_PARAMS.get("domain") || null,
+    cluster: INIT_PARAMS.get("cluster") || null,
+  });
 
   async function fetchData() {
     try {
@@ -756,7 +764,7 @@ export default function App() {
 
   const scrollTo = useCallback((id) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el) el.scrollIntoView({ behavior: "instant", block: "start" });
   }, []);
 
   useEffect(() => {
@@ -798,6 +806,51 @@ export default function App() {
       clusterObserver.disconnect();
     };
   }, [grouped]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchActive) {
+      params.set("q", committedSearch);
+    } else if (!showLanding) {
+      params.set("subject", subject);
+      params.set("grade", grade);
+      if (activeDomain && grouped.length > 0) {
+        const d = grouped.find((g) => domainId(g.name) === activeDomain);
+        if (d) params.set("domain", d.name);
+      }
+      if (activeCluster && grouped.length > 0) {
+        for (const d of grouped) {
+          for (const cn of d.clusters.keys()) {
+            if (clusterId(d.name, cn) === activeCluster) {
+              params.set("cluster", cn);
+              break;
+            }
+          }
+          if (params.has("cluster")) break;
+        }
+      }
+    }
+    const qs = params.toString();
+    const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  }, [subject, grade, committedSearch, searchActive, showLanding, activeDomain, activeCluster, grouped]);
+
+  useEffect(() => {
+    const { domain, cluster } = pendingScroll.current;
+    if (!domain && !cluster) return;
+    if (grouped.length === 0) return;
+    pendingScroll.current = { domain: null, cluster: null };
+    requestAnimationFrame(() => {
+      if (cluster && domain) {
+        const match = grouped.find((d) => d.name === domain);
+        if (match && match.clusters.has(cluster)) {
+          scrollTo(clusterId(domain, cluster));
+          return;
+        }
+      }
+      if (domain) scrollTo(domainId(domain));
+    });
+  }, [grouped, scrollTo]);
 
   const hasData = standards.length > 0;
 
@@ -854,7 +907,7 @@ export default function App() {
               letterSpacing: "0.2px",
             }}
           />
-          {search && (
+          {search && search.trim() === committedSearch && (
             <button
               onClick={() => { setSearch(""); setCommittedSearch(""); }}
               className="shrink-0 bg-transparent border-none cursor-pointer p-0 ml-1"
@@ -863,7 +916,7 @@ export default function App() {
               <CloseIcon />
             </button>
           )}
-          {search && (
+          {search && search.trim() !== committedSearch && (
             <button
               onClick={() => setCommittedSearch(search.trim())}
               className="shrink-0 bg-transparent border-none cursor-pointer p-0 ml-1"
@@ -950,60 +1003,56 @@ export default function App() {
               className="text-sm sm:text-lg font-light select-none"
               style={{ color: "rgba(255,255,255,0.4)", fontFamily: "'Nunito', sans-serif" }}
             >/</span>
-            <div className="flex items-center rounded-lg px-1.5 sm:px-2 py-0.5 transition-colors"
+            <div className="relative flex items-center rounded-lg px-1.5 sm:px-2 py-0.5 transition-colors cursor-pointer"
               style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)")}
             >
+              <span
+                className="font-extrabold text-sm sm:text-lg pointer-events-none"
+                style={{ color: "white", fontFamily: "'Nunito', sans-serif" }}
+              >
+                {subject}
+              </span>
+              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5 pointer-events-none" style={{ color: "white" }} />
               <select
                 value={subject}
                 onChange={(e) => {
                   setSubject(e.target.value);
                   setSearch("");
                 }}
-                className="bg-transparent font-extrabold text-sm sm:text-lg outline-none cursor-pointer border-none p-0"
-                style={{
-                  color: "white",
-                  fontFamily: "'Nunito', sans-serif",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  backgroundImage: "none",
-                  paddingRight: 0,
-                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               >
                 {subjects.map((s) => (
-                  <option key={s} value={s} style={{ color: C.text }}>{s}</option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
-              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5" style={{ color: "white" }} />
             </div>
             <span
               className="text-sm sm:text-lg font-light select-none"
               style={{ color: "rgba(255,255,255,0.4)", fontFamily: "'Nunito', sans-serif" }}
             >/</span>
-            <div className="flex items-center rounded-lg px-1.5 sm:px-2 py-0.5 transition-colors"
+            <div className="relative flex items-center rounded-lg px-1.5 sm:px-2 py-0.5 transition-colors cursor-pointer"
               style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)")}
             >
+              <span
+                className="font-extrabold text-sm sm:text-lg pointer-events-none"
+                style={{ color: "white", fontFamily: "'Nunito', sans-serif" }}
+              >
+                {gradeLabel(grade)}
+              </span>
+              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5 pointer-events-none" style={{ color: "white" }} />
               <select
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                className="bg-transparent font-extrabold text-sm sm:text-lg outline-none cursor-pointer border-none p-0"
-                style={{
-                  color: "white",
-                  fontFamily: "'Nunito', sans-serif",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  backgroundImage: "none",
-                  paddingRight: 0,
-                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               >
                 {grades.map((g) => (
-                  <option key={g} value={g} style={{ color: C.text }}>{gradeLabel(g)}</option>
+                  <option key={g} value={g}>{gradeLabel(g)}</option>
                 ))}
               </select>
-              <ChevronDownIcon className="shrink-0 w-3 h-3 sm:w-4 sm:h-4 ml-0.5" style={{ color: "white" }} />
             </div>
           </div>
         )}
@@ -1017,7 +1066,7 @@ export default function App() {
         </main>
       ) : searchActive ? (
         <main className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-8 py-4 sm:py-6 max-w-5xl">
+          <div className="px-4 sm:px-8 py-4 sm:py-6">
             <p
               className="text-xs font-semibold mb-4"
               style={{ color: C.textSecondary, fontFamily: "'Nunito', sans-serif" }}
